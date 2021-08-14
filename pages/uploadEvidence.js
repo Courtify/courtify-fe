@@ -1,9 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import web3Connect from '../lib/web3Connect'
 import Header from '../components/Header'
+import Image from 'next/image'
 import Link from 'next/link'
-const ipfsClient = require('ipfs-http-client')
-
+const { create } = require('ipfs-http-client')
+const ipfs = create({
+  host: 'ipfs.infura.io',
+  port: 5001,
+  protocol: 'http',
+})
 
 export default function uploadEvidence() {
   const [contractInfo, setContractInfo] = useState({
@@ -14,14 +19,22 @@ export default function uploadEvidence() {
 
   const [evidenceImage, setEvidenceImage] = useState()
 
+  const [evidenceImageBuffer, setEvidenceImageBuffer] = useState()
+
+  const [evidenceImagePreview, setEvidenceImagePreview] = useState(
+    '/images/illustration.jpg',
+  )
+
+  const [displayMessage, setDisplayMessage] = useState("Loading")
+
   const [caseInfo, setCaseInfo] = useState({
     caseNo: '',
-    evidenceImage: '',
     ipfsHash: '',
   })
 
   const [loading, setLoading] = useState(false)
   const [isResponse, setIsResponse] = useState(false)
+
 
   const handleChange = (e) => {
     const value = e.target.value
@@ -37,8 +50,12 @@ export default function uploadEvidence() {
     const reader = new window.FileReader()
     reader.readAsArrayBuffer(file)
     reader.onloadend = () => {
-      console.log(Buffer(reader.result))
-      setEvidenceImage(Buffer(reader.result))
+      const bufferData = Buffer(reader.result)
+      console.log(bufferData)
+      //const base64String = btoa(String.fromCharCode(...new Uint8Array(bufferData)));
+      //base64String = `data:image/png;base64${base64String}`
+      // console.log(base64String)
+      setEvidenceImageBuffer(bufferData)
     }
   }
 
@@ -53,10 +70,38 @@ export default function uploadEvidence() {
     }
   }
 
-  const createNewRecord = (e) => {
+  //https://ipfs.infura.io/ipfs/QmYByKqyRkB34yPMqU4Uinq5jkgpWj23msShoQdZs2aUu6
+  const uploadEvidence = (e) => {
+    setLoading(true)
     e.preventDefault()
-    console.log('create')
-    //createNewCase(caseInfo.date, caseInfo.state, caseInfo.district, caseInfo.petitioner, caseInfo.caseType );
+    console.log('Uploading to IPFS..')
+    let data = evidenceImageBuffer
+    console.log('image data: ', data)
+    if (data) {
+      try {
+        const result = ipfs.add(data).then((result) => {
+          console.log('ipfs result: ', result.path)
+
+        })
+      } catch (e) {
+        console.log('Error: ', e)
+      }
+    } else {
+      alert('No files submitted. Please try again.')
+      console.log('ERROR: No data to submit')
+    }
+    setTimeout(function() {
+      //your code to be executed after 1 second
+      setDisplayMessage("Uploading to IPFS...")
+      setLoading(false)
+    }, 1000);
+
+    setTimeout(function() {
+      //your code to be executed after 1 second
+      setDisplayMessage("Writing to Blockchain...")
+      setLoading(false)
+    }, 2000);
+    
   }
 
   let content
@@ -67,7 +112,7 @@ export default function uploadEvidence() {
         className=" w-full h-full fixed top-0 left-0 bg-white opacity-75 z-50 flex flex-col justify-center items-center"
       >
         <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
-        <p className="pt-6 text-black">Waiting for confirmation...</p>
+        <p className="pt-6 text-black">{displayMessage}</p>
       </div>
     )
   } else if (isResponse) {
@@ -109,13 +154,19 @@ export default function uploadEvidence() {
                 onChange={handleChange}
               />
             </div>
+            <Image
+              className="rounded-lg"
+              src={evidenceImagePreview}
+              width={700}
+              height={350}
+            />
             <div className="flex flex-col">
               <label>Select the Evidence Image:</label>
               <input
                 className="bg-white border border-gray-300 rounded-lg py-2 px-4 mb-4"
                 type="file"
                 name="evidenceImage"
-                value={caseInfo.evidenceImage}
+                value={evidenceImage}
                 onChange={(e) => setImageInfo(e)}
               />
             </div>
