@@ -17,7 +17,7 @@ export default function Home() {
         id="loading-screen"
         className=" w-full h-full fixed top-0 left-0 bg-white opacity-75 z-50 flex justify-center items-center"
       >
-        <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
       </div>
     )
   } else {
@@ -63,8 +63,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div class=" flex justify-center items-center">
-          <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+        <div className=" flex justify-center items-center">
+          <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
         </div>
       </div>
     )

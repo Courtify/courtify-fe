@@ -35,6 +35,9 @@ package-lock.json
 #git
 /.git
 
+#abi
+./contracts
+
 # Logs
 logs
 *.log

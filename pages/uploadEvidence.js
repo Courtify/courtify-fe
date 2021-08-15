@@ -3,6 +3,7 @@ import web3Connect from '../lib/web3Connect'
 import Header from '../components/Header'
 import Image from 'next/image'
 import Link from 'next/link'
+import writeEvidence from '../lib/writeEvidence'
 const { create } = require('ipfs-http-client')
 const ipfs = create({
   host: 'ipfs.infura.io',
@@ -11,11 +12,6 @@ const ipfs = create({
 })
 
 export default function uploadEvidence() {
-  const [contractInfo, setContractInfo] = useState({
-    contractAddress: '',
-  })
-
-  const [userAccount, setUserAccount] = useState(0x0)
 
   const [evidenceImage, setEvidenceImage] = useState()
 
@@ -25,24 +21,15 @@ export default function uploadEvidence() {
     '/images/illustration.jpg',
   )
 
-  const [displayMessage, setDisplayMessage] = useState("Loading")
-
-  const [caseInfo, setCaseInfo] = useState({
-    caseNo: '',
-    ipfsHash: '',
-  })
-
+  const [displayMessage, setDisplayMessage] = useState()
+  const [caseId, setCaseId] = useState()
+  const [txHash, setTxHash] = useState()
+  const [etherScanLink, setEtherScanLink] = useState()
+  const [imageHash, setImageHash] = useState()
   const [loading, setLoading] = useState(false)
   const [isResponse, setIsResponse] = useState(false)
 
 
-  const handleChange = (e) => {
-    const value = e.target.value
-    setCaseInfo({
-      ...caseInfo,
-      [e.target.name]: value,
-    })
-  }
 
   const setImageInfo = (e) => {
     e.preventDefault()
@@ -59,48 +46,41 @@ export default function uploadEvidence() {
     }
   }
 
-  const checkConnection = async () => {
-    try {
-      const web3Status = await web3Connect()
-    } catch (error) {
-      alert(
-        `Failed to load web3, accounts, or contract. Check console for details.`,
-      )
-      console.log(error)
-    }
-  }
-
+  
   //https://ipfs.infura.io/ipfs/QmYByKqyRkB34yPMqU4Uinq5jkgpWj23msShoQdZs2aUu6
-  const uploadEvidence = (e) => {
+  const uploadEvidence = async(e) => {
+    setDisplayMessage("Uploading to IPFS..")
     setLoading(true)
     e.preventDefault()
     console.log('Uploading to IPFS..')
     let data = evidenceImageBuffer
-    console.log('image data: ', data)
+    //console.log('image data: ', data)
     if (data) {
       try {
-        const result = ipfs.add(data).then((result) => {
+        console.log(data)
+        const result = await ipfs.add(data).then(async(result) => {
           console.log('ipfs result: ', result.path)
-
+          const ipfsHash = result.path
+          setDisplayMessage("Uploaded to IPFS. Writing to Blockchain...")
+          console.log("cId:",caseId)
+          const txHash = await writeEvidence(caseId, ipfsHash)
+          var url = "https://etherscan.io/tx/"
+          url = url.concat(txHash) 
+          //setTxHash(txHash)
+          console.log('URL: ', url)
+          setEtherScanLink(url)
+          setLoading(false)
+          setDisplayMessage("Upload Completed!")
+          setIsResponse(true)
         })
       } catch (e) {
         console.log('Error: ', e)
+        alert('Failed to submit Evidence')
       }
     } else {
       alert('No files submitted. Please try again.')
       console.log('ERROR: No data to submit')
     }
-    setTimeout(function() {
-      //your code to be executed after 1 second
-      setDisplayMessage("Uploading to IPFS...")
-      setLoading(false)
-    }, 1000);
-
-    setTimeout(function() {
-      //your code to be executed after 1 second
-      setDisplayMessage("Writing to Blockchain...")
-      setLoading(false)
-    }, 2000);
     
   }
 
@@ -122,17 +102,27 @@ export default function uploadEvidence() {
         className=" w-full h-full fixed top-0 left-0 bg-white opacity-70 z-50 flex flex-col justify-center items-center"
       >
         <p className="pt-6 text-black font-bold text-3xl text-green-400">
-          Case Created!
+          {displayMessage}
         </p>
-        <p className="pt-6 text-black">Case Id: 55rwerwr345353</p>
         <a
-          href="https://etherscan.io/tx/0x4bf652c1811815fe3e9f3d7e4ddaecd9aed85c00f3dd26f130f826c8d698ebb9"
+          href={etherScanLink}
           target="_blank"
         >
           <p className="pt-6 text-black animate-pulse text-red-600">
             View on Etherscan
           </p>
         </a>
+        <div className="pt-6">
+          <Link href="/uploadEvidence">
+            <button
+              type="button"
+              onClick={()=>{setIsResponse(false); }}
+              className=" bg-gray-600  px-8 py-2 rounded hover:bg-black text-white block"
+            >
+              Back{' '}
+            </button>
+          </Link>
+        </div>
       </div>
     )
   } else {
@@ -148,10 +138,10 @@ export default function uploadEvidence() {
               <input
                 className="bg-white border border-gray-300 rounded-lg py-2 px-4 mb-4"
                 type="text"
-                placeholder="Enter the Case Number"
-                name="caseNo"
-                value={caseInfo.caseNo}
-                onChange={handleChange}
+                placeholder="Enter the Case ID"
+                name="caseId"
+                value={caseId}
+                onChange={(e) => {setCaseId(e.target.value)}}
               />
             </div>
             <Image
