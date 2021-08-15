@@ -46,6 +46,8 @@ export default function uploadEvidence() {
         const result = await ipfs.add(data).then(async (result) => {
           const ipfsHash = result.path
           setDisplayMessage('Uploaded to IPFS. Writing to Blockchain...')
+          console.log("IPFS: "+ipfsHash);
+          console.log("CaseID: "+caseId);
           const txHash = await writeEvidence(caseId, ipfsHash)
           var url = 'https://mumbai.polygonscan.com/tx/'
           url = url.concat(txHash)
