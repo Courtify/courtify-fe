@@ -20,6 +20,7 @@ export default function createRecord() {
 
   const [loading, setLoading] = useState(false)
   const [isResponse, setIsResponse] = useState(false)
+  const [transactionLink, setTransactionLink] = useState()
 
   const handleChange = (e) => {
     const value = e.target.value
@@ -35,7 +36,7 @@ export default function createRecord() {
     setDisplayMessage('Waiting for confirmation...')
     e.preventDefault()
     try {
-      const caseId = await writeRecord(
+      const [caseId, txHash ] = await writeRecord(
         caseInfo.date,
         caseInfo.state,
         caseInfo.district,
@@ -45,9 +46,9 @@ export default function createRecord() {
         caseInfo.caseType,
       )
       setCaseId(caseId)
-      //window.localStorage.setItem('caseId',caseId)
-      //let temp = window.localStorage.getItem("caseId")
-      //console.log(temp)
+      var url = "https://mumbai.polygonscan.com/tx/"
+      url = url.concat(txHash) 
+      setTransactionLink(url)
       setLoading(false)
       setIsResponse(true)
     } catch (error) {
@@ -64,7 +65,7 @@ export default function createRecord() {
         id="loading-screen"
         className=" w-full h-full fixed top-0 left-0 bg-white opacity-75 z-50 flex flex-col justify-center items-center"
       >
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+        <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
         <p className="pt-6 text-black">{displayMessage}</p>
       </div>
     )
@@ -79,11 +80,11 @@ export default function createRecord() {
         </p>
         <p className="pt-6 text-black">Case Id: {caseId}</p>
         <a
-          href="https://etherscan.io/tx/0x4bf652c1811815fe3e9f3d7e4ddaecd9aed85c00f3dd26f130f826c8d698ebb9"
+          href={transactionLink}
           target="_blank"
         >
           <p className="pt-6 text-black animate-pulse text-red-600">
-            View on Etherscan
+          View Transaction
           </p>
         </a>
 
@@ -171,7 +172,7 @@ export default function createRecord() {
               <input
                 className="bg-white border border-gray-300 rounded-lg py-2 px-4 mb-4"
                 type="text"
-                placeholder="Enter the petitioner Id"
+                placeholder="Enter '0' if your  are a new petitioner "
                 name="petitionerId"
                 value={caseInfo.petitionerId}
                 onChange={handleChange}

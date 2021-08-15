@@ -2,13 +2,10 @@ import Head from 'next/head'
 import Header from '../components/Header'
 import Image from 'next/image'
 import Link from 'next/link'
-import Web3 from 'web3'
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 
 export default function Home() {
   const [loading, setLoading] = useState(false)
-  const [contractAddress, setContractAddress] = useState(0x0)
-  const [userAccount, setUserAccount] = useState(0x0)
 
   let content
   if (loading) {
@@ -61,10 +58,6 @@ export default function Home() {
               </Link>
             </div>
           </div>
-        </div>
-
-        <div className=" flex justify-center items-center">
-          <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
         </div>
       </div>
     )
